@@ -1,2 +1,9 @@
 .superpowers/
 node_modules/
+.next/
+.env*.local
+.env
+.expo/
+dist/
+android/
+ios/
