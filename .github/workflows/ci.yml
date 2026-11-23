@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        ports:
+          - 5433:5432
+        env:
+          POSTGRES_DB: dou_alerts
+          POSTGRES_USER: dou
+          POSTGRES_PASSWORD: dou
+        options: >-
+          --health-cmd "pg_isready -U dou -d dou_alerts"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r lint
+      - run: pnpm -r typecheck
+      # Migrations run in the vitest globalSetup; no live DOU calls happen in tests.
+      - run: pnpm -r test
+      - run: pnpm --filter web build
+        env:
+          BETTER_AUTH_SECRET: ci-dummy-secret-not-used-at-runtime-0000
+          BETTER_AUTH_URL: http://localhost:3000
+          DATABASE_URL: postgres://dou:dou@localhost:5433/dou_alerts
