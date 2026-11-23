@@ -27,5 +27,6 @@ export const auth = betterAuth({
     }),
     expo(),
   ],
+  rateLimit: { enabled: true },
   trustedOrigins: ["dou-alerts://", ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : [])],
 });
