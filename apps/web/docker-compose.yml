@@ -1,0 +1,14 @@
+# Dev/test only credentials.
+services:
+  db:
+    image: postgres:17
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: dou_alerts
+      POSTGRES_USER: dou
+      POSTGRES_PASSWORD: dou
+    volumes:
+      - dou_pg:/var/lib/postgresql/data
+volumes:
+  dou_pg:
