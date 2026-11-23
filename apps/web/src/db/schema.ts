@@ -1,4 +1,4 @@
-import { boolean, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 
 const ts = (name: string) => timestamp(name, { withTimezone: true });
 
@@ -81,7 +81,11 @@ export const match = pgTable(
     createdAt: ts("created_at").defaultNow().notNull(),
     notifiedAt: ts("notified_at"),
   },
-  (t) => [primaryKey({ columns: [t.alertId, t.actSlug] })],
+  (t) => [
+    primaryKey({ columns: [t.alertId, t.actSlug] }),
+    index("match_act_slug_idx").on(t.actSlug),
+    index("match_created_at_idx").on(t.createdAt),
+  ],
 );
 
 export const phraseCheck = pgTable("phrase_check", {
