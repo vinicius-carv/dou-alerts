@@ -4,7 +4,7 @@ import { user } from "@/db/schema";
 
 export async function resetDb(): Promise<void> {
   await db.execute(
-    sql`TRUNCATE "user", "session", "account", "verification", "alert", "act", "match", "phrase_check", "push_token" CASCADE`,
+    sql`TRUNCATE "user", "session", "account", "verification", "alert", "act", "match", "phrase_check", "push_token", "rateLimit" CASCADE`,
   );
 }
 

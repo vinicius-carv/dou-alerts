@@ -27,6 +27,7 @@ export const auth = betterAuth({
     }),
     expo(),
   ],
-  rateLimit: { enabled: true },
+  // Database storage: serverless instances do not share memory, so in-memory limits would not hold.
+  rateLimit: { enabled: true, storage: "database" },
   trustedOrigins: ["dou-alerts://", ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : [])],
 });

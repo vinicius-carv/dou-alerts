@@ -5,6 +5,8 @@ vi.mock("@/lib/mailer", () => ({ sendEmail: vi.fn(async () => {}) }));
 import { auth } from "@/lib/auth";
 import { sendEmail } from "@/lib/mailer";
 import { requireUser } from "@/lib/session";
+import { db } from "@/db";
+import { rateLimit } from "@/db/schema";
 import { resetDb } from "./db";
 
 const post = (path: string, body: unknown) =>
@@ -39,6 +41,7 @@ describe("auth", () => {
     const user = await requireUser(new Request("http://localhost:3000/", { headers: { cookie } }));
     expect(user?.email).toBe("a@example.com");
     expect(await requireUser(new Request("http://localhost:3000/"))).toBeNull();
+    expect((await db.select().from(rateLimit)).length).toBeGreaterThan(0); // limits are stored in the database
   });
 
   it("magic-link request sends one email with both the code and the link", async () => {
