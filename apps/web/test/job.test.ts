@@ -110,6 +110,45 @@ describe("runDaily", () => {
   });
 });
 
+describe("runDaily concurrency", () => {
+  it("returns 'already running' without sending when another run holds the lock", async () => {
+    const u = await createUser("a@x.com");
+    await addAlert(u.id, "Foo");
+    const other = await db.$client.connect();
+    await other.query("select pg_advisory_lock($1)", [727_001]);
+    try {
+      const d = deps();
+      const r = await runDaily(d);
+      expect(r.errors).toEqual(["already running"]);
+      expect(d.search).not.toHaveBeenCalled();
+      expect(d.sendEmail).not.toHaveBeenCalled();
+    } finally {
+      await other.query("select pg_advisory_unlock($1)", [727_001]);
+      other.release();
+    }
+    const d2 = deps();
+    expect((await runDaily(d2)).errors).toEqual([]); // lock released by the finished run too
+    expect((await runDaily(deps())).errors).toEqual([]);
+  });
+
+  it("does not abort other users when marking one user notified fails", async () => {
+    const [x, y] = [await createUser("x@x.com"), await createUser("y@x.com")];
+    await addAlert(x.id, "Foo");
+    await addAlert(y.id, "Foo");
+    const realUpdate = db.update.bind(db);
+    let calls = 0;
+    const spy = vi.spyOn(db, "update").mockImplementation(((t: never) => {
+      if (++calls === 1) throw new Error("db down");
+      return realUpdate(t);
+    }) as never);
+    const r = await runDaily(deps());
+    spy.mockRestore();
+    expect(r.emails).toBe(2);
+    expect(r.errors).toHaveLength(1);
+    expect(r.errors[0]).toContain("db down");
+  });
+});
+
 describe("GET /api/cron/daily", () => {
   it("returns 401 without a valid bearer, even when CRON_SECRET is unset", async () => {
     vi.stubEnv("CRON_SECRET", "s3cret");

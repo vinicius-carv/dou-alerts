@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull, lt, notExists, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lt, notExists, sql } from "drizzle-orm";
 import type { DouAct } from "@dou-alerts/core";
 import { buildDigest } from "@dou-alerts/core";
 import { db } from "@/db";
@@ -17,7 +17,22 @@ export type DailyDeps = {
 const RETENTION_MS = 90 * 24 * 3600 * 1000;
 const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
+const LOCK_ID = 727_001; // arbitrary app-wide advisory lock key
+
 export async function runDaily(deps: DailyDeps) {
+  // Session-level lock needs a dedicated connection; it stops overlapping cron runs from double-sending digests.
+  const lock = await db.$client.connect();
+  try {
+    const { rows } = await lock.query("select pg_try_advisory_lock($1) as ok", [LOCK_ID]);
+    if (!rows[0].ok) return { phrases: 0, acts: 0, matches: 0, emails: 0, pushes: 0, errors: ["already running"] };
+    return await run(deps);
+  } finally {
+    await lock.query("select pg_advisory_unlock($1)", [LOCK_ID]).catch(() => {});
+    lock.release();
+  }
+}
+
+async function run(deps: DailyDeps) {
   const start = deps.now();
   const out = { phrases: 0, acts: 0, matches: 0, emails: 0, pushes: 0, errors: [] as string[] };
 
@@ -32,7 +47,7 @@ export async function runDaily(deps: DailyDeps) {
   const queue = [...byKey].sort(([, a], [, b]) => (a.checkedAt?.getTime() ?? -Infinity) - (b.checkedAt?.getTime() ?? -Infinity));
 
   for (const [key, { phrase }] of queue) {
-    if (deps.now() - start > (deps.budgetMs ?? 240_000)) break;
+    if (deps.now() - start > (deps.budgetMs ?? 100_000)) break;
     try {
       const found = await deps.search(phrase);
       out.phrases++;
@@ -41,8 +56,10 @@ export async function runDaily(deps: DailyDeps) {
         await db.insert(act).values(found).onConflictDoNothing();
         const alerts = await db.select({ id: alert.id }).from(alert).where(eq(alert.key, key));
         const values = alerts.flatMap((a) => found.map((f) => ({ alertId: a.id, actSlug: f.slug })));
-        const ins = await db.insert(match).values(values).onConflictDoNothing().returning({ a: match.alertId });
-        out.matches += ins.length;
+        if (values.length) {
+          const ins = await db.insert(match).values(values).onConflictDoNothing().returning({ a: match.alertId });
+          out.matches += ins.length;
+        }
       }
       const checkedAt = new Date(deps.now());
       await db.insert(phraseCheck).values({ key, checkedAt }).onConflictDoUpdate({ target: phraseCheck.key, set: { checkedAt } });
@@ -68,10 +85,12 @@ export async function runDaily(deps: DailyDeps) {
       continue;
     }
     out.emails++;
-    const now = new Date(deps.now());
-    for (const i of items)
-      await db.update(match).set({ notifiedAt: now }).where(and(eq(match.alertId, i.alertId), eq(match.actSlug, i.act.slug)));
     try {
+      const now = new Date(deps.now());
+      await db
+        .update(match)
+        .set({ notifiedAt: now })
+        .where(and(isNull(match.notifiedAt), inArray(match.alertId, [...new Set(items.map((i) => i.alertId))])));
       const tokens = (await db.select({ t: pushToken.token }).from(pushToken).where(eq(pushToken.userId, userId))).map((r) => r.t);
       if (tokens.length) {
         await deps.sendPush(tokens, digest.pushBody);
