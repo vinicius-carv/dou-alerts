@@ -24,7 +24,10 @@ export default function LoginPage() {
     setError("");
     const { error } = await authClient.signIn.emailOtp({ email, otp: code });
     if (error) setError("Código inválido ou expirado.");
-    else router.push("/");
+    else {
+      router.push("/");
+      router.refresh();
+    }
   }
 
   return (

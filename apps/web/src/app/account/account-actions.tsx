@@ -12,12 +12,15 @@ export default function AccountActions() {
   async function signOut() {
     await authClient.signOut();
     router.push("/login");
+    router.refresh();
   }
 
   async function deleteAccount() {
     const res = await fetch("/api/account", { method: "DELETE" });
-    if (res.ok) router.push("/login");
-    else setError("Não foi possível excluir a conta.");
+    if (res.ok) {
+      router.push("/login");
+      router.refresh();
+    } else setError("Não foi possível excluir a conta.");
   }
 
   return (
