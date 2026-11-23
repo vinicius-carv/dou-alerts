@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "DOU Alertas",
+    "slug": "dou-alerts",
+    "version": "1.0.0",
+    "scheme": "dou-alerts",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": { "supportsTablet": true, "bundleIdentifier": "br.com.viniciuscarv.doualerts" },
+    "android": {
+      "package": "br.com.viniciuscarv.doualerts",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": ["expo-router", "expo-secure-store", "expo-notifications"],
+    "web": { "favicon": "./assets/favicon.png" }
+  }
+}
