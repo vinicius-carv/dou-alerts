@@ -38,6 +38,14 @@ describe("searchPhrase", () => {
     const d = mk(() => { throw new Error("boom"); }, () => ok(page(2)));
     expect(await searchPhrase("x y z", d)).toHaveLength(2);
     expect(d.fetch).toHaveBeenCalledTimes(2);
+    expect(d.sleep).toHaveBeenCalledTimes(1);
+    expect(d.sleep).toHaveBeenCalledWith(1000);
+  });
+
+  it("does not retry a 4xx", async () => {
+    const d = mk(() => new Response("", { status: 404 }));
+    await expect(searchPhrase("x y z", d)).rejects.toThrow(/HTTP 404/);
+    expect(d.fetch).toHaveBeenCalledTimes(1);
   });
 
   it("throws HTTP status after a failed retry", async () => {

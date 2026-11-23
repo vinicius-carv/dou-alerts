@@ -5,9 +5,10 @@ const PAGE_SIZE = 20;
 
 export type SearchDeps = { fetch: typeof fetch; sleep: (ms: number) => Promise<void> };
 
-async function getHtml(url: string, fetchFn: typeof fetch): Promise<string> {
+async function getHtml(url: string, { fetch: fetchFn, sleep }: SearchDeps): Promise<string> {
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt > 0) await sleep(1000); // keep >=1 s between DOU requests on retry too
     try {
       const res = await fetchFn(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(30_000) });
       if (res.ok) return await res.text();
@@ -27,7 +28,7 @@ export async function searchPhrase(phrase: string, deps: SearchDeps, opts: { max
   let cursor: PageCursor | undefined;
   for (let page = 1; page <= maxPages; page++) {
     if (page > 1) await deps.sleep(1000);
-    const html = await getHtml(searchUrl(phrase, page, cursor), deps.fetch);
+    const html = await getHtml(searchUrl(phrase, page, cursor), deps);
     const acts = parseSearchPage(html);
     for (const a of acts) if (!bySlug.has(a.slug)) bySlug.set(a.slug, a);
     if (acts.length < PAGE_SIZE) break;
