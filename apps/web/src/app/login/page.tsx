@@ -45,7 +45,8 @@ export default function LoginPage() {
             Código
             <input inputMode="numeric" pattern="\d{6}" maxLength={6} required value={code} onChange={(e) => setCode(e.target.value)} />
           </label>
-          <button type="submit">Entrar</button>
+          <button type="submit">Entrar</button>{" "}
+          <button type="button" onClick={() => { setSent(false); setCode(""); setError(""); }}>Usar outro e-mail</button>
         </form>
       )}
       {error && <p role="alert">{error}</p>}

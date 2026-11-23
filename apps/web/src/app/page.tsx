@@ -1,8 +1,16 @@
-export default function Home() {
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import AlertsManager from "./alerts-manager";
+
+export default async function Home() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) redirect("/login");
   return (
     <main>
-      <h1>DOU Alertas</h1>
-      <p>Receba avisos diários quando suas palavras-chave aparecerem no Diário Oficial da União.</p>
+      <h1>Alertas</h1>
+      <p>Receba um aviso diário quando uma dessas expressões aparecer no Diário Oficial da União.</p>
+      <AlertsManager />
     </main>
   );
 }

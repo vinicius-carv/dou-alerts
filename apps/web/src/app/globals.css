@@ -1,0 +1,17 @@
+:root { color-scheme: light; }
+body { font-family: system-ui, sans-serif; color: #1a1a1a; background: #fafaf8; margin: 0; line-height: 1.5; }
+main { max-width: 40rem; margin: 0 auto; padding: 1.5rem 1rem; }
+nav { display: flex; gap: 1rem; max-width: 40rem; margin: 0 auto; padding: 1rem 1rem 0; }
+a { color: #0b4f8a; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid #0b4f8a; outline-offset: 2px; }
+label { display: block; font-weight: 600; }
+input { display: block; width: 100%; box-sizing: border-box; padding: .5rem; margin-top: .25rem; font: inherit; border: 1px solid #767676; border-radius: 4px; }
+button { font: inherit; padding: .5rem .9rem; border: 1px solid #0b4f8a; background: #0b4f8a; color: #fff; border-radius: 4px; cursor: pointer; }
+button.danger { background: #fff; color: #9b1c1c; border-color: #9b1c1c; }
+.row { display: flex; gap: .5rem; align-items: flex-end; }
+.row label { flex: 1; }
+.list { list-style: none; padding: 0; }
+.list li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .6rem 0; border-bottom: 1px solid #ddd; }
+.list li.match { flex-direction: column; align-items: flex-start; gap: .15rem; }
+.muted { color: #595959; font-size: .9rem; }
+.error { color: #9b1c1c; }
