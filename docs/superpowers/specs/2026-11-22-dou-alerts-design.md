@@ -81,7 +81,7 @@ Vercel cron, once a day at 08:00 America/Sao_Paulo (11:00 UTC; `exactDate=dia` i
 3. Upsert acts; insert matches for every alert with that phrase (conflict = ignore).
 4. For each user with un-notified matches: one Resend email digest (title, organ, excerpt, link) and one Expo push ("N novos atos no DOU"); then set `notified_at`.
 5. Retention cleanup.
-6. Time budget: route sets `maxDuration = 300` (Vercel Hobby with Fluid compute allows 300 s); stop starting new phrases after ~240 s; phrases are processed least-recently-checked first (`phrase_check(phrase, checked_at)` table or column) so a cut-off run does not starve the same phrases every day.
+6. Time budget: route sets `maxDuration = 300` (Vercel Hobby with Fluid compute allows 300 s); stop starting new phrases after ~100 s (one phrase can take ~185 s worst case); phrases are processed least-recently-checked first (`phrase_check(phrase, checked_at)` table or column) so a cut-off run does not starve the same phrases every day.
 7. Returns a JSON summary (phrases checked, acts seen, matches, emails, pushes, errors) and logs it.
 
 A per-phrase DOU failure is logged and skipped, not fatal. Notification failures leave `notified_at` null so the next run retries.

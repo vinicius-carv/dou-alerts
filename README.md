@@ -50,7 +50,9 @@ mobile (Expo)  --/
   A failing phrase is logged and skipped, not fatal.
 - Each act notifies once per alert. If sending fails, the match stays un-notified and is retried next run.
 - Phrases are processed least-recently-checked first, so a run cut short by the time budget does not
-  starve the same phrases every day.
+  starve the same phrases every day. The job stops starting new phrases after ~100 s (a single phrase can take
+  ~3 min in the worst case, and the route's `maxDuration` is 300 s). Overlapping runs are prevented by a Postgres
+  advisory lock.
 - **Retention: 90 days.** Older matches, and acts no longer referenced, are deleted by the daily job.
   Account deletion cascades everything.
 
@@ -110,6 +112,8 @@ pnpm --filter mobile android
 pnpm -r lint && pnpm -r typecheck
 pnpm -r test    # web tests need the Docker Postgres above; migrations run in the vitest global setup
 ```
+
+Note: `pnpm test` truncates the tables of the local dev database (same Postgres on port 5433).
 
 - `packages/core`: parser (saved DOU HTML fixture), normalisation, digest, search paging.
 - `apps/web`: auth, API routes and the daily job, against a real Postgres with an injected fetch.
