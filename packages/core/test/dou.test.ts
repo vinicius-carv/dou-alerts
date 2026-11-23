@@ -38,3 +38,10 @@ describe("searchUrl", () => {
     expect(nextCursor(readFileSync(new URL("./fixtures/search-empty.html", import.meta.url), "utf8"))).toBeNull();
   });
 });
+
+describe("nextCursor", () => {
+  it("throws when the last hit lacks cursor fields", () => {
+    const bad = `<script id="_br_com_seatecnologia_in_buscadou_BuscaDouPortlet_params">{"jsonArray":[{"urlTitle":"a"}]}</script>`;
+    expect(() => nextCursor(bad)).toThrow("DOU page format changed");
+  });
+});

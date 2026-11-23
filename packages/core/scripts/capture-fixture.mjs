@@ -1,9 +1,9 @@
-// Usage: node scripts/capture-fixture.mjs "Banco do Brasil" [page] [outfile]
-// Writes a live DOU search page (page 1 by default) as a test fixture.
+// Usage: node scripts/capture-fixture.mjs "Banco do Brasil" [outfile]
+// Writes live DOU search page 1 as a test fixture.
 import { writeFileSync } from "node:fs";
 
 const UA = "Mozilla/5.0 (compatible; dou-alerts/0.1; +https://github.com/vinicius-carv/dou-alerts)";
-const [phrase, page = "1", out] = process.argv.slice(2);
+const [phrase, out] = process.argv.slice(2);
 const url = new URL("https://www.in.gov.br/consulta/-/buscar/dou");
 url.searchParams.set("q", `"${phrase}"`);
 url.searchParams.set("s", "todos");

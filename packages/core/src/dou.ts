@@ -68,7 +68,9 @@ export function parseSearchPage(html: string): DouAct[] {
 export function nextCursor(html: string): PageCursor | null {
   const last = hits(html).at(-1);
   if (!last) return null;
-  return { score: String(last.score), id: String(last.classPK), displayDate: String(last.displayDateSortable) };
+  const { score, classPK: id, displayDateSortable: displayDate } = last;
+  if ([score, id, displayDate].some((v) => v == null || v === "")) throw new Error(FORMAT);
+  return { score: String(score), id: String(id), displayDate: String(displayDate) };
 }
 
 /**
