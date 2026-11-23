@@ -1,61 +1,57 @@
 # Live end-to-end run
 
-Status: **partial.** The auth, alert and cron-auth legs ran against a real local server and Postgres.
-The DOU search leg could not complete: in.gov.br closed every connection from the development machine
-(see below). Re-run the steps under "Resume" when the DOU is reachable again and replace this file.
-
-Not part of this run: real email delivery (needs the owner's Resend key) and real push (needs an Expo
-project / EAS `projectId`). With `RESEND_API_KEY` unset, the dev mailer logs emails instead of sending.
+**Status: passed on 2026-11-23** against the live Diário Oficial da União, local web server, Docker Postgres.
+Email used the dev mailer fallback (logged, not sent) and push was off (no EAS project), so real
+email and push delivery are not covered here.
 
 ## Setup
 
-```sh
-docker compose -f apps/web/docker-compose.yml up -d        # Postgres 17 on :5433
-# apps/web/.env.local (git-ignored): DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL=http://localhost:3100,
-# CRON_SECRET (random dev values); RESEND_API_KEY unset
-pnpm --filter web exec next dev -p 3100
+```bash
+docker compose -f apps/web/docker-compose.yml up -d
+# apps/web/.env.local (git-ignored): DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL=http://localhost:3917,
+# CRON_SECRET (random dev values); RESEND_API_KEY unset -> emails are logged
+DATABASE_URL=postgres://dou:dou@localhost:5433/dou_alerts npx drizzle-kit migrate   # in apps/web
+npx next dev -p 3917                                                                  # in apps/web
 ```
 
-## Login through the real HTTP endpoints (worked)
+## Login through the real HTTP endpoints
 
-```sh
-curl -H 'Origin: http://localhost:3100' -H 'Content-Type: application/json' \
-  -X POST localhost:3100/api/auth/email-otp/send-verification-otp \
+```bash
+curl -X POST $B/api/auth/email-otp/send-verification-otp -H "origin: $B" -H "content-type: application/json" \
   -d '{"email":"owner@example.com","type":"sign-in"}'
-# {"success":true}
-# server log: [mailer:dev] to=owner@example.com subject=Seu acesso ao DOU Alertas / "Seu código: 797241"
-
-curl -c cookies.txt ... -X POST localhost:3100/api/auth/sign-in/email-otp -d '{"email":"owner@example.com","otp":"797241"}'
-# 200 {"token":"<redacted>","user":{"email":"owner@example.com","emailVerified":true,...}}
-
-curl -b cookies.txt ... -X POST localhost:3100/api/alerts --data-binary @body.json   # {"phrase":"Ministério da Saúde"}
+# {"success":true}; server log: [mailer:dev] to=owner@example.com subject=Seu acesso ao DOU Alertas
+curl -c jar -X POST $B/api/auth/sign-in/email-otp -H "origin: $B" -H "content-type: application/json" \
+  -d '{"email":"owner@example.com","otp":"<otp from log>"}'
+# 200
+curl -b jar -X POST $B/api/alerts -H "origin: $B" -H "content-type: application/json; charset=utf-8" \
+  --data-binary @body.json        # {"phrase":"Ministério da Saúde"} saved as UTF-8
 # 201 {"alert":{"id":"<uuid>","phrase":"Ministério da Saúde",...}}
 ```
 
-(Note: pass non-ASCII phrases as a UTF-8 file or `é` escapes; Git Bash on Windows mangles them in `-d`.)
+Send non-ASCII bodies from a UTF-8 file on Windows: Git Bash's inline `-d` re-encodes accents.
 
-## Cron (reached the DOU, which refused the connection)
+## Daily job against the live DOU
 
-```sh
-curl -H "Authorization: Bearer $CRON_SECRET" localhost:3100/api/cron/daily
-# {"phrases":0,"acts":0,"matches":0,"emails":0,"pushes":0,"errors":["Ministério da Saúde: fetch failed"]}
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" $B/api/cron/daily
+# {"phrases":1,"acts":60,"matches":60,"emails":1,"pushes":0,"errors":[]}   (10.8 s: 3 pages x 20, keyset paging, 1 s spacing)
+# server log: [mailer:dev] to=owner@example.com subject=DOU Alertas: 60 novos atos
+
+curl -b jar $B/api/matches
+# 60 matches, e.g.
+# Ministério da Saúde | 23/11/2026 | EXTRATO DE TERMO ADITIVO | https://www.in.gov.br/web/dou/-/extrato-de-termo-aditivo-745769836
+
+curl -o act.html -w "%{http_code}" https://www.in.gov.br/web/dou/-/extrato-de-termo-aditivo-745769836
+# 200, page contains div.texto-dou (the act's full text)
+
+# second run, same day: no duplicate notification
+curl -H "Authorization: Bearer $CRON_SECRET" $B/api/cron/daily
+# {"phrases":1,"acts":60,"matches":0,"emails":0,"pushes":0,"errors":[]}
 ```
 
-The route authenticated correctly and the job handled the failure as designed (logged, skipped, not fatal).
+## Notes
 
-## Why the DOU leg failed
-
-From this machine every request to `https://www.in.gov.br/` completes the TLS handshake and is then closed
-by the server before any response bytes (undici `UND_ERR_SOCKET: other side closed`, curl/schannel
-"server closed abruptly"). It failed identically with Node fetch, curl, curl in a Docker container, and with
-several User-Agent strings, and kept failing for 20+ minutes of retries. That points at an IP-level block
-or rate limit at the DOU's WAF rather than the app (the design spec recorded the same URL working from this
-machine on 2026-11-22). Google was reachable, so general connectivity was fine.
-
-## Resume
-
-1. Confirm `curl -sI https://www.in.gov.br/consulta` returns 200 (try another network if still blocked).
-2. Repeat the login steps, add an alert for a phrase present in today's DOU (e.g. `Ministério da Saúde`).
-3. Call `/api/cron/daily`; expect `phrases>=1, acts>=1, matches>=1, emails=1` (logged by the dev mailer).
-4. `GET /api/matches` with the cookie; open one `in.gov.br` URL and expect HTTP 200.
-5. Optionally screenshot `/matches` to `docs/screenshots/web-matches.png`.
+- An earlier attempt the same day failed with `fetch failed`: in.gov.br closes connections coming from VPN
+  exit IPs. Without the VPN (Brazilian residential IP) and from a Vercel function in `iad1` it answers normally.
+- Not covered: real email delivery (needs `RESEND_API_KEY`), real push (needs `eas init`), the web screenshot of
+  the matches page.
