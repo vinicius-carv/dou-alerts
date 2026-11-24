@@ -9,7 +9,7 @@ records new matches, and sends you an email digest plus a push notification with
 A small full-stack portfolio project: Next.js + Postgres on the web, Expo (React Native) on mobile,
 one shared TypeScript core.
 
-**Live:** https://dou-alerts.vercel.app (sign in with any email; the daily job runs at 08:00 Brasília).
+**Live:** https://dou.vinicius-carv.com.br (sign in with any email; the daily job runs at 08:00 Brasília).
 
 ## Screenshots
 
