@@ -11,9 +11,9 @@ one shared TypeScript core.
 
 ## Screenshots
 
-| Alerts | Matches | Account |
+| Alerts | Matches | Login |
 | --- | --- | --- |
-| ![Alerts](docs/screenshots/mobile-alerts.png) | ![Matches](docs/screenshots/mobile-matches.png) | ![Account](docs/screenshots/mobile-account.png) |
+| ![Alerts](docs/screenshots/mobile-alerts.png) | ![Matches](docs/screenshots/mobile-matches.png) | ![Login](docs/screenshots/mobile-login.png) |
 
 (Android emulator. UI copy is in Portuguese because the DOU is Brazilian; code and docs are English.)
 
@@ -113,7 +113,7 @@ pnpm -r lint && pnpm -r typecheck
 pnpm -r test    # web tests need the Docker Postgres above; migrations run in the vitest global setup
 ```
 
-Note: `pnpm test` truncates the tables of the local dev database (same Postgres on port 5433).
+Note: `pnpm test` uses a separate `dou_alerts_test` database on the same Postgres (created automatically), so the dev database is left alone.
 
 - `packages/core`: parser (saved DOU HTML fixture), normalisation, digest, search paging.
 - `apps/web`: auth, API routes and the daily job, against a real Postgres with an injected fetch.

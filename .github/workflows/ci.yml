@@ -32,7 +32,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm -r lint
       - run: pnpm -r typecheck
-      # Migrations run in the vitest globalSetup; no live DOU calls happen in tests.
+      # The vitest globalSetup creates dou_alerts_test (via the postgres DB) and migrates it; no live DOU calls happen in tests.
       - run: pnpm -r test
       - run: pnpm --filter web build
         env:
