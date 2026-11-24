@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Alert, Button, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
+import { c, font, ui } from "@/lib/theme";
 
 export default function Account() {
   const { data: session } = authClient.useSession();
@@ -26,13 +27,28 @@ export default function Account() {
   }
 
   return (
-    <View style={s.box}>
-      <Text>Conectado como {session?.user.email}</Text>
-      <Button title="Sair" onPress={() => authClient.signOut()} />
-      <Button title="Excluir conta" color="#b00020" onPress={confirmDelete} />
-      {!!error && <Text style={s.error}>{error}</Text>}
+    <View style={[ui.screen, s.box]}>
+      <View style={{ gap: 4 }}>
+        <Text style={ui.soft}>Conectado como</Text>
+        <Text style={s.email}>{session?.user.email}</Text>
+      </View>
+      <Pressable style={ui.button} onPress={() => authClient.signOut()}>
+        <Text style={ui.buttonText}>Sair</Text>
+      </Pressable>
+      <View style={s.danger}>
+        <Text style={ui.soft}>Excluir a conta apaga todos os seus alertas e não pode ser desfeito.</Text>
+        <Pressable onPress={confirmDelete} hitSlop={8}>
+          <Text style={s.delete}>Excluir conta</Text>
+        </Pressable>
+      </View>
+      {!!error && <Text style={ui.error}>{error}</Text>}
     </View>
   );
 }
 
-const s = StyleSheet.create({ box: { flex: 1, padding: 16, gap: 12 }, error: { color: "#b00020" } });
+const s = StyleSheet.create({
+  box: { padding: 16, gap: 20 },
+  email: { fontFamily: font.serif, fontSize: 20, color: c.ink },
+  danger: { borderTopWidth: 1, borderTopColor: c.rule, paddingTop: 16, gap: 8 },
+  delete: { fontFamily: font.sansBold, fontSize: 14, color: c.alert, textDecorationLine: "underline" },
+});
