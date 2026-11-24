@@ -8,8 +8,10 @@ export default async function Home() {
   if (!session) redirect("/login");
   return (
     <main>
-      <h1>Alertas</h1>
-      <p>Receba um aviso diário quando uma dessas expressões aparecer no Diário Oficial da União.</p>
+      <div className="page-head">
+        <h1>Alertas</h1>
+        <p>Toda manhã procuramos estas expressões no Diário Oficial da União e avisamos você por e-mail quando aparecerem.</p>
+      </div>
       <AlertsManager />
     </main>
   );

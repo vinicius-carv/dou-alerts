@@ -8,8 +8,13 @@ export default async function AccountPage() {
   if (!session) redirect("/login");
   return (
     <main>
-      <h1>Conta</h1>
-      <p>E-mail: <strong>{session.user.email}</strong></p>
+      <div className="page-head">
+        <h1>Conta</h1>
+      </div>
+      <section className="panel" aria-labelledby="email-heading">
+        <h2 id="email-heading">E-mail</h2>
+        <p>Os resumos diários chegam em <span className="value">{session.user.email}</span>.</p>
+      </section>
       <AccountActions />
     </main>
   );

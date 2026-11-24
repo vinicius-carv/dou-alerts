@@ -16,26 +16,41 @@ export default function AccountActions() {
   }
 
   async function deleteAccount() {
-    const res = await fetch("/api/account", { method: "DELETE" });
-    if (res.ok) {
+    setError("");
+    try {
+      const res = await fetch("/api/account", { method: "DELETE" });
+      if (!res.ok) return setError("Não foi possível excluir a conta. Tente de novo em instantes.");
       router.push("/login");
       router.refresh();
-    } else setError("Não foi possível excluir a conta.");
+    } catch {
+      setError("Sem conexão com o servidor. Verifique sua internet e tente de novo.");
+    }
   }
 
   return (
     <>
-      <p><button type="button" onClick={signOut}>Sair</button></p>
-      {!confirming ? (
-        <button type="button" className="danger" onClick={() => setConfirming(true)}>Excluir conta</button>
-      ) : (
-        <div role="group" aria-label="Confirmar exclusão">
-          <p>Isso apaga sua conta, seus alertas e os atos encontrados. Não dá para desfazer.</p>
-          <button type="button" className="danger" onClick={deleteAccount}>Sim, excluir minha conta</button>{" "}
-          <button type="button" onClick={() => setConfirming(false)}>Cancelar</button>
+      <section className="panel" aria-labelledby="session-heading">
+        <h2 id="session-heading">Sessão</h2>
+        <p>Sair deste navegador. Seus alertas continuam ativos.</p>
+        <div className="actions">
+          <button type="button" className="secondary" onClick={signOut}>Sair</button>
         </div>
-      )}
-      {error && <p role="alert" className="error">{error}</p>}
+      </section>
+      <section className="panel" aria-labelledby="delete-heading">
+        <h2 id="delete-heading">Excluir conta</h2>
+        <p>Apaga sua conta, seus alertas e os atos encontrados. Não dá para desfazer.</p>
+        {!confirming ? (
+          <div className="actions">
+            <button type="button" className="danger" onClick={() => setConfirming(true)}>Excluir conta</button>
+          </div>
+        ) : (
+          <div role="group" aria-label="Confirmar exclusão" className="actions">
+            <button type="button" className="danger" onClick={deleteAccount}>Sim, excluir minha conta</button>
+            <button type="button" className="secondary" onClick={() => setConfirming(false)}>Cancelar</button>
+          </div>
+        )}
+        {error && <p role="alert" className="error">{error}</p>}
+      </section>
     </>
   );
 }
