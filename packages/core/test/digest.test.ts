@@ -27,4 +27,22 @@ describe("buildDigest", () => {
     expect(d.html).toContain("&lt;script&gt;");
     expect(d.html).toContain("Ler no DOU");
   });
+  it("marks the phrase in the excerpt and in the heading", () => {
+    const m = buildDigest([{ phrase: "Saúde", act: { ...act(9), excerpt: "Ministerio da SAUDE publica" } }]);
+    expect(m.html).toMatch(/<mark[^>]*>SAUDE<\/mark> publica/);
+  });
+  it("caps acts per phrase at 20 and links to the app only when appUrl is given", () => {
+    const many: DigestItem[] = Array.from({ length: 25 }, (_, i) => ({ phrase: "X", act: act(i) }));
+    const without = buildDigest(many);
+    expect(without.html).toContain("e mais 5 atos");
+    expect(without.html).not.toContain("veja todos no app");
+    expect(without.html).not.toContain("s24");
+    expect(without.text).toContain("s24");
+    expect(buildDigest(many, "https://app.example").html).toContain('href="https://app.example"');
+    expect(buildDigest(items).html).not.toContain("e mais");
+  });
+  it("has the digest footer and no unsubscribe", () => {
+    expect(d.html).toContain("cadastrou alertas no DOU Alertas.");
+    expect(d.html.toLowerCase()).not.toContain("unsubscribe");
+  });
 });

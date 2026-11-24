@@ -77,7 +77,7 @@ async function run(deps: DailyDeps) {
     .where(isNull(match.notifiedAt));
   const byUser = Map.groupBy(pending, (r) => r.userId);
   for (const [userId, items] of byUser) {
-    const digest = buildDigest(items.map((i) => ({ phrase: i.phrase, act: i.act })));
+    const digest = buildDigest(items.map((i) => ({ phrase: i.phrase, act: i.act })), process.env.BETTER_AUTH_URL);
     try {
       await deps.sendEmail({ to: items[0]!.email, subject: digest.subject, html: digest.html, text: digest.text });
     } catch (e) {
