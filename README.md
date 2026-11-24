@@ -11,6 +11,16 @@ one shared TypeScript core.
 
 ## Screenshots
 
+**Web**
+
+![Matches on the web](docs/screenshots/web-matches.png)
+
+| Login | Alerts |
+| --- | --- |
+| ![Login](docs/screenshots/web-login.png) | ![Alerts](docs/screenshots/web-alerts.png) |
+
+**Mobile**
+
 | Alerts | Matches | Login |
 | --- | --- | --- |
 | ![Alerts](docs/screenshots/mobile-alerts.png) | ![Matches](docs/screenshots/mobile-matches.png) | ![Login](docs/screenshots/mobile-login.png) |

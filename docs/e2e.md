@@ -53,5 +53,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" $B/api/cron/daily
 
 - An earlier attempt the same day failed with `fetch failed`: in.gov.br closes connections coming from VPN
   exit IPs. Without the VPN (Brazilian residential IP) and from a Vercel function in `iad1` it answers normally.
-- Not covered: real email delivery (needs `RESEND_API_KEY`), real push (needs `eas init`), the web screenshot of
-  the matches page.
+- Real email delivery was checked on 2026-11-24 with a Resend key for the verified domain
+  `mail.vinicius-carv.com.br`: the login email (code + magic link) and two digests ("60 novos atos",
+  "22 novos atos") arrived in a Gmail inbox (not spam), sent from `DOU Alertas <alertas@mail.vinicius-carv.com.br>`.
+- Not covered: real push delivery (needs `eas init` for an Expo project id).
