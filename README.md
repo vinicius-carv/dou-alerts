@@ -9,6 +9,8 @@ records new matches, and sends you an email digest plus a push notification with
 A small full-stack portfolio project: Next.js + Postgres on the web, Expo (React Native) on mobile,
 one shared TypeScript core.
 
+**Live:** https://dou-alerts.vercel.app (sign in with any email; the daily job runs at 08:00 Brasília).
+
 ## Screenshots
 
 **Web**
@@ -134,8 +136,12 @@ A manual run against the real DOU is recorded in [docs/e2e.md](docs/e2e.md).
 
 ## Deploy notes
 
-- Web: Vercel. `apps/web/vercel.json` schedules the cron at `0 11 * * *` UTC (08:00 Brasilia). Set the env vars above in the project.
-- Database: Neon free Postgres; run `pnpm --filter web db:migrate` against it.
+- Web: Vercel, project root `apps/web`, functions pinned to `gru1` (São Paulo), next to the database and to
+  in.gov.br. `apps/web/vercel.json` schedules the cron at `0 11 * * *` UTC (08:00 Brasília). Set the env vars
+  above in the project (`ENABLE_EXPERIMENTAL_COREPACK=1` so Vercel uses the pinned pnpm).
+- Database: Neon free Postgres in `aws-sa-east-1`; the app uses the pooled connection string, migrations use
+  the direct one: `DATABASE_URL=<direct url> pnpm --filter web db:migrate`.
+- in.gov.br refuses connections from VPN exit IPs; Vercel's `gru1` and `iad1` regions reach it fine.
 - Email: Resend with a verified sending domain; set `EMAIL_FROM` to an address on it.
 - Mobile: point `EXPO_PUBLIC_API_URL` at the deployed web URL and add an EAS `projectId` to enable push.
 
